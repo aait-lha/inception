@@ -1,0 +1,156 @@
+services:
+
+  mariadb:
+    build: ./requirements/mariadb
+    image: mariadb:aait-lha
+    container_name: mariadb
+    restart: always
+    env_file:
+      - .env
+    secrets:
+      - db_password
+      - db_root_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - inc
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+      interval: 3s
+
+  wordpress:
+    build: ./requirements/wordpress
+    image: wordpress:aait-lha
+    container_name: wordpress
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    restart: always
+    env_file:
+      - .env
+    secrets:
+      - db_password
+      - wp_admin_password
+      - wp_user_password
+    volumes:
+      - wordpress_data:/var/www/html
+    networks:
+      - inc
+
+  nginx:
+    build: ./requirements/nginx
+    image: nginx:aait-lha
+    container_name: nginx
+    depends_on:
+      - wordpress
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./requirements/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - inc
+
+  redis:
+    build: ./requirements/bonus/redis
+    image: redis:aait-lha
+    container_name: redis
+    restart: always
+    depends_on:
+      - wordpress
+    networks:
+      - inc
+
+  static-website:
+    build: ./requirements/bonus/static-website
+    image: static-website:aait-lha
+    container_name: static-website
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./requirements/bonus/static-website/tools/index.html:/var/www/html/index.html
+    networks:
+      - inc
+
+  adminer:
+    build: ./requirements/bonus/adminer
+    image: adminer:aait-lha
+    container_name: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - wordpress
+    networks:
+      - inc
+
+  ftp:
+    build: ./requirements/bonus/ftp
+    image: ftp:aait-lha
+    container_name: ftp
+    restart: always
+    secrets:
+      - ftp_password
+    env_file:
+      - .env
+    ports:
+      - "21:21"
+      - "22000-22100:22000-22100"
+    volumes:
+      - wordpress_data:/home/aait-lha
+    networks:
+      - inc
+
+  cadvisor:
+    container_name: cadvisor
+    build: ./requirements/bonus/cadvisor
+    image: cadvisor:aait-lha
+    restart: always
+    ports:
+      - "8090:8080"
+    volumes:
+      - /:/rootfs:ro # 
+      - /var/run:/var/run:ro # access socket files, container states
+      - /sys:/sys:ro # access cgroup files to monitor CPU, memory ...
+      - /var/lib/docker/:/var/lib/docker:ro # metadata about docker containers,vms, ntws,,imgs
+      - /dev/disk/:/dev/disk:ro # access the block devices (disks, partitions)
+    networks:
+      - inc
+
+volumes:
+  mariadb_data:
+    name: mariadb
+    driver: local
+    driver_opts:
+      device: /home/aait-lha/data/mariadb
+      o : bind
+      type : none
+  wordpress_data:
+    name: wordpress
+    driver: local
+    driver_opts:
+      device: /home/aait-lha/data/wordpress
+      o : bind
+      type : none
+
+networks:
+  inc:
+    driver: bridge
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password.txt
+  ftp_password:
+    file: ../secrets/ftp_password.txt
