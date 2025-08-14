@@ -1,8 +1,7 @@
-FROM debian:bullseye
+FROM debian:bookworm
 
-RUN apt-get update && apt-get upgrade -y
-
-RUN apt-get install -y vsftpd \
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y vsftpd \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /var/run/vsftpd/empty

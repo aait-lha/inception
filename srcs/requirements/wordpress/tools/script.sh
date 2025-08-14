@@ -1,10 +1,6 @@
 #!/bin/bash
 
-WP_DB_PASSWORD=$(cat /run/secrets/db_password)
-WP_USER_PASSWORD=$(cat /run/secrets/wp_user_password)
-WP_ADMIN_PASSWORD=$(cat /run/secrets/wp_admin_password)
-
-sleep 20
+sleep 30
 
 curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 
@@ -40,4 +36,4 @@ wp theme install twentyseventeen --activate --allow-root --path="$WP_PATH"
 
 chown -R www-data:www-data "$WP_PATH"
 
-exec php-fpm7.4 -F
+exec php-fpm8.2 -F

@@ -1,8 +1,7 @@
-FROM debian:bullseye
+FROM debian:bookworm
 
-RUN apt-get update && apt-get upgrade -y
-
-RUN apt-get install -y mariadb-server \
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y mariadb-server \
     && rm -rf /var/lib/apt/lists/*
 
 COPY tools/script.sh /

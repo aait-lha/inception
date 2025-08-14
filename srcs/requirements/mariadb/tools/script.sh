@@ -1,8 +1,5 @@
 #!/bin/bash
 
-MARIA_PASSWORD=$(cat /run/secrets/db_password)
-MARIA_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
-
 # Start MariaDB in background for initialization
 service mariadb start
 
