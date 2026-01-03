@@ -36,7 +36,7 @@ Each service runs in a **dedicated container**.
 - Redis (WordPress caching)
 - FTP server
 - Adminer
-- Monitoring (Prometheus + Grafana)
+- CAdvisor
 - Static website (optional)
 
 ---
